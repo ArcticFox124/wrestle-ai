@@ -45,6 +45,7 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
   // Multi-Provider AI Hub
   const [provider, setProvider] = useState<AIProvider>('local');
   const [customKey, setCustomKey] = useState<string>(apiKey || '');
+  const [openRouterModel, setOpenRouterModel] = useState<string>('google/gemini-flash-1.5');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingStatus, setLoadingStatus] = useState<string>('');
@@ -114,6 +115,7 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
             videoUrl: normalized.normalizedUrl,
             targetWrestler,
             provider,
+            openRouterModel: provider === 'openrouter' ? openRouterModel : undefined,
             apiKey: customKey.trim() || undefined,
             matchNotes,
           }),
@@ -161,6 +163,7 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
             frames,
             targetWrestler,
             provider,
+            openRouterModel: provider === 'openrouter' ? openRouterModel : undefined,
             apiKey: customKey.trim() || undefined,
             matchNotes,
           }),
@@ -318,9 +321,28 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
               </button>
             </div>
 
-            {/* Custom Key Input (Only appears if user chooses an external provider) */}
+            {/* Custom Key & Model Input (Only appears if user chooses an external provider) */}
             {provider !== 'local' && (
-              <div className="pt-2 animate-fade-in space-y-1.5">
+              <div className="pt-2 animate-fade-in space-y-2">
+                {provider === 'openrouter' && (
+                  <div className="space-y-1 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                    <label className="text-[10px] text-purple-300 font-bold block">
+                      Select OpenRouter Vision Model:
+                    </label>
+                    <select
+                      value={openRouterModel}
+                      onChange={(e) => setOpenRouterModel(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="google/gemini-flash-1.5">google/gemini-flash-1.5 (Recommended • Most Stable)</option>
+                      <option value="meta-llama/llama-3.2-11b-vision-instruct:free">meta-llama/llama-3.2-11b-vision-instruct:free (100% Free Tier)</option>
+                      <option value="meta-llama/llama-3.2-11b-vision-instruct">meta-llama/llama-3.2-11b-vision-instruct (Official Meta)</option>
+                      <option value="openai/gpt-4o-mini">openai/gpt-4o-mini (Budget GPT-4o)</option>
+                      <option value="anthropic/claude-3.5-sonnet">anthropic/claude-3.5-sonnet (Highest Accuracy)</option>
+                    </select>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
                     <Key className="w-3.5 h-3.5 text-indigo-400" />

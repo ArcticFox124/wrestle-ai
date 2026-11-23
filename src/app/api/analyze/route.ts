@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4B: OpenRouter (Supports all open/free/paid vision models with one key)
+    // 4B: OpenRouter (Supports all open/free/paid vision models with fallback)
     if (provider === 'openrouter') {
       const contentParts: any[] = [{ type: 'text', text: promptText }];
       if (frames && frames.length > 0) {
@@ -176,35 +176,62 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${effectiveApiKey}`,
-          'HTTP-Referer': 'https://wrestle-ai.vercel.app',
-          'X-Title': 'MatVision AI',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-exp:free', // top fast free vision model, or falls back gracefully
-          messages: [{ role: 'user', content: contentParts }],
-          response_format: { type: 'json_object' },
-          temperature: 0.05,
-        }),
-      });
+      // Candidate models to try in order if one is retired/deprecated by OpenRouter
+      const requestedModel = body.openRouterModel?.trim();
+      const modelsToTry = [
+        requestedModel,
+        'google/gemini-flash-1.5',
+        'meta-llama/llama-3.2-11b-vision-instruct:free',
+        'meta-llama/llama-3.2-11b-vision-instruct',
+        'openai/gpt-4o-mini',
+      ].filter(Boolean) as string[];
 
-      if (!openRouterRes.ok) {
-        const err = await openRouterRes.text();
-        return NextResponse.json({ error: `OpenRouter Error: ${err}` }, { status: openRouterRes.status });
+      let lastError = '';
+      for (const targetModel of modelsToTry) {
+        try {
+          const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${effectiveApiKey}`,
+              'HTTP-Referer': 'https://wrestle-ai.vercel.app',
+              'X-Title': 'MatVision AI',
+            },
+            body: JSON.stringify({
+              model: targetModel,
+              messages: [{ role: 'user', content: contentParts }],
+              response_format: { type: 'json_object' },
+              temperature: 0.05,
+            }),
+          });
+
+          if (!openRouterRes.ok) {
+            const err = await openRouterRes.text();
+            lastError = err;
+            // If model is retired or not found (404), try next model in fallback list
+            if (openRouterRes.status === 404 || err.includes('no longer available') || err.includes('not found')) {
+              continue;
+            }
+            return NextResponse.json({ error: `OpenRouter Error: ${err}` }, { status: openRouterRes.status });
+          }
+
+          const openRouterData = await openRouterRes.json();
+          const rawJson = openRouterData.choices?.[0]?.message?.content;
+          const cleanJson = cleanMarkdownJson(rawJson);
+          return NextResponse.json({
+            success: true,
+            data: JSON.parse(cleanJson),
+            source: `openrouter (${targetModel})`,
+          });
+        } catch (fetchErr: any) {
+          lastError = fetchErr.message;
+        }
       }
 
-      const openRouterData = await openRouterRes.json();
-      const rawJson = openRouterData.choices?.[0]?.message?.content;
-      const cleanJson = cleanMarkdownJson(rawJson);
-      return NextResponse.json({
-        success: true,
-        data: JSON.parse(cleanJson),
-        source: 'openrouter',
-      });
+      return NextResponse.json(
+        { error: `OpenRouter Error: All candidate vision models failed. Last response: ${lastError}` },
+        { status: 502 }
+      );
     }
 
     // 4C: xAI Grok (Grok 2 Vision)
