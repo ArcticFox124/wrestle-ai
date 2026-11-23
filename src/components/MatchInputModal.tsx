@@ -27,7 +27,7 @@ interface MatchInputModalProps {
   onSaveApiKey: (key: string) => void;
 }
 
-export type AIProvider = 'local' | 'openai' | 'claude' | 'gemini';
+export type AIProvider = 'local' | 'openrouter' | 'grok' | 'openai' | 'claude' | 'gemini';
 
 export const MatchInputModal: React.FC<MatchInputModalProps> = ({
   isOpen,
@@ -238,7 +238,7 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setProvider('local')}
@@ -254,6 +254,32 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
 
               <button
                 type="button"
+                onClick={() => setProvider('openrouter')}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  provider === 'openrouter'
+                    ? 'bg-purple-950/70 border-purple-500 text-white shadow-md ring-1 ring-purple-500'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="text-[11px] font-black block text-purple-300">🌐 OpenRouter</span>
+                <span className="text-[9px] text-slate-400 block mt-0.5">All Open Vision Models</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProvider('grok')}
+                className={`p-2.5 rounded-xl border text-left transition-all ${
+                  provider === 'grok'
+                    ? 'bg-sky-950/70 border-sky-500 text-white shadow-md ring-1 ring-sky-500'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span className="text-[11px] font-black block text-sky-300">🚀 xAI Grok 2</span>
+                <span className="text-[9px] text-slate-400 block mt-0.5">Grok 2 Vision Key</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setProvider('openai')}
                 className={`p-2.5 rounded-xl border text-left transition-all ${
                   provider === 'openai'
@@ -261,7 +287,7 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span className="text-[11px] font-black block text-indigo-300">OpenAI GPT-4o</span>
+                <span className="text-[11px] font-black block text-indigo-300">🤖 OpenAI GPT-4o</span>
                 <span className="text-[9px] text-slate-400 block mt-0.5">OpenAI Key</span>
               </button>
 
@@ -274,7 +300,7 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span className="text-[11px] font-black block text-amber-300">Claude 3.5</span>
+                <span className="text-[11px] font-black block text-amber-300">🎯 Claude 3.5</span>
                 <span className="text-[9px] text-slate-400 block mt-0.5">Anthropic Key</span>
               </button>
 
@@ -287,26 +313,86 @@ export const MatchInputModal: React.FC<MatchInputModalProps> = ({
                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span className="text-[11px] font-black block text-blue-300">Google Gemini</span>
+                <span className="text-[11px] font-black block text-blue-300">🔷 Google Gemini</span>
                 <span className="text-[9px] text-slate-400 block mt-0.5">Gemini Key</span>
               </button>
             </div>
 
             {/* Custom Key Input (Only appears if user chooses an external provider) */}
             {provider !== 'local' && (
-              <div className="pt-2 animate-fade-in">
-                <div className="flex items-center justify-between mb-1">
+              <div className="pt-2 animate-fade-in space-y-1.5">
+                <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
                     <Key className="w-3.5 h-3.5 text-indigo-400" />
                     Enter {provider.toUpperCase()} API Key:
                   </label>
+                  {provider === 'openrouter' && (
+                    <a
+                      href="https://openrouter.ai/keys"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-purple-400 hover:underline font-semibold"
+                    >
+                      Get OpenRouter Key ↗
+                    </a>
+                  )}
+                  {provider === 'grok' && (
+                    <a
+                      href="https://console.x.ai"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-sky-400 hover:underline font-semibold"
+                    >
+                      Get xAI Grok Key ↗
+                    </a>
+                  )}
+                  {provider === 'openai' && (
+                    <a
+                      href="https://platform.openai.com/api-keys"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-indigo-400 hover:underline font-semibold"
+                    >
+                      Get OpenAI Key ↗
+                    </a>
+                  )}
+                  {provider === 'claude' && (
+                    <a
+                      href="https://console.anthropic.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-amber-400 hover:underline font-semibold"
+                    >
+                      Get Claude Key ↗
+                    </a>
+                  )}
+                  {provider === 'gemini' && (
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-blue-400 hover:underline font-semibold"
+                    >
+                      Get Gemini Key ↗
+                    </a>
+                  )}
                 </div>
                 <input
                   type="password"
                   value={customKey}
                   onChange={(e) => setCustomKey(e.target.value)}
-                  placeholder={`Paste your ${provider} API key here...`}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  placeholder={
+                    provider === 'openrouter'
+                      ? 'sk-or-v1-...'
+                      : provider === 'grok'
+                      ? 'xai-...'
+                      : provider === 'openai'
+                      ? 'sk-proj-...'
+                      : provider === 'claude'
+                      ? 'sk-ant-...'
+                      : 'AIzaSy...'
+                  }
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
             )}

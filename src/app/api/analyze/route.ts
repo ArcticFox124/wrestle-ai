@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
 
     const effectiveApiKey = apiKey.trim();
 
-    // STEP 4: Cloud Multimodal Analysis (OpenAI, Claude, Gemini)
+    // STEP 4: Cloud Multimodal Analysis (OpenAI, Claude, Gemini, OpenRouter, Grok)
     // Explicit anti-pretending instructions: Tell the model to REJECT if it cannot see real action!
     const promptText = getPrompt(targetWrestler, matchNotes, sourceType, videoUrl, verifiedVideoTitle);
 
@@ -161,6 +161,89 @@ export async function POST(req: NextRequest) {
         success: true,
         data: JSON.parse(rawJson),
         source: 'openai',
+      });
+    }
+
+    // 4B: OpenRouter (Supports all open/free/paid vision models with one key)
+    if (provider === 'openrouter') {
+      const contentParts: any[] = [{ type: 'text', text: promptText }];
+      if (frames && frames.length > 0) {
+        frames.slice(0, 16).forEach((f: any) => {
+          contentParts.push({
+            type: 'image_url',
+            image_url: { url: `data:image/jpeg;base64,${f.data}` },
+          });
+        });
+      }
+
+      const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${effectiveApiKey}`,
+          'HTTP-Referer': 'https://wrestle-ai.vercel.app',
+          'X-Title': 'MatVision AI',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.0-flash-exp:free', // top fast free vision model, or falls back gracefully
+          messages: [{ role: 'user', content: contentParts }],
+          response_format: { type: 'json_object' },
+          temperature: 0.05,
+        }),
+      });
+
+      if (!openRouterRes.ok) {
+        const err = await openRouterRes.text();
+        return NextResponse.json({ error: `OpenRouter Error: ${err}` }, { status: openRouterRes.status });
+      }
+
+      const openRouterData = await openRouterRes.json();
+      const rawJson = openRouterData.choices?.[0]?.message?.content;
+      const cleanJson = cleanMarkdownJson(rawJson);
+      return NextResponse.json({
+        success: true,
+        data: JSON.parse(cleanJson),
+        source: 'openrouter',
+      });
+    }
+
+    // 4C: xAI Grok (Grok 2 Vision)
+    if (provider === 'grok') {
+      const contentParts: any[] = [{ type: 'text', text: promptText }];
+      if (frames && frames.length > 0) {
+        frames.slice(0, 16).forEach((f: any) => {
+          contentParts.push({
+            type: 'image_url',
+            image_url: { url: `data:image/jpeg;base64,${f.data}` },
+          });
+        });
+      }
+
+      const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${effectiveApiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'grok-2-vision-1212',
+          messages: [{ role: 'user', content: contentParts }],
+          temperature: 0.05,
+        }),
+      });
+
+      if (!grokRes.ok) {
+        const err = await grokRes.text();
+        return NextResponse.json({ error: `Grok API Error: ${err}` }, { status: grokRes.status });
+      }
+
+      const grokData = await grokRes.json();
+      const rawJson = grokData.choices?.[0]?.message?.content;
+      const cleanJson = cleanMarkdownJson(rawJson);
+      return NextResponse.json({
+        success: true,
+        data: JSON.parse(cleanJson),
+        source: 'grok',
       });
     }
 
