@@ -45,6 +45,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-red-600/30 text-red-400 border border-red-500/40 rounded-md">
                 Folkstyle AI
               </span>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-emerald-950/90 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>v2.1.0</span>
+              </div>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block truncate max-w-xs">
               {matchTitle || 'Film Room & Coaching Analytics'}
