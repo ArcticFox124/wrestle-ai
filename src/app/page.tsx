@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MatchAnalysisResult, TargetWrestler } from '@/types/wrestling';
+import { MatchAnalysisResult, TargetWrestler, MatchEvent } from '@/types/wrestling';
 import { DEMO_MATCH_NCAA } from '@/lib/demoData';
 import { Navbar } from '@/components/Navbar';
 import { Scoreboard } from '@/components/Scoreboard';
@@ -21,7 +21,8 @@ import {
   BarChart3, 
   Sparkles, 
   UploadCloud, 
-  FileCheck 
+  FileCheck,
+  ShieldCheck 
 } from 'lucide-react';
 
 export default function Home() {
@@ -76,6 +77,56 @@ export default function Home() {
     }
   };
 
+  // Add custom verified event
+  const handleAddEvent = (newEvent: MatchEvent) => {
+    const combined = [...matchData.events, newEvent].sort((a, b) => a.timestamp - b.timestamp);
+    let r = 0;
+    let g = 0;
+    const recomputed = combined.map((ev) => {
+      r += ev.points.red;
+      g += ev.points.green;
+      return {
+        ...ev,
+        runningScore: { red: r, green: g },
+      };
+    });
+
+    setMatchData((prev) => ({
+      ...prev,
+      events: recomputed,
+      finalScore: {
+        red: r,
+        green: g,
+        winner: r > g ? 'red' : g > r ? 'green' : 'tie',
+      },
+    }));
+  };
+
+  // Delete inaccurate or unwanted event
+  const handleDeleteEvent = (id: string) => {
+    const filtered = matchData.events.filter((ev) => ev.id !== id);
+    let r = 0;
+    let g = 0;
+    const recomputed = filtered.map((ev) => {
+      r += ev.points.red;
+      g += ev.points.green;
+      return {
+        ...ev,
+        runningScore: { red: r, green: g },
+      };
+    });
+
+    setMatchData((prev) => ({
+      ...prev,
+      events: recomputed,
+      finalScore: {
+        red: r,
+        green: g,
+        winner: r > g ? 'red' : g > r ? 'green' : 'tie',
+      },
+    }));
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       {/* Top Navbar */}
@@ -100,6 +151,11 @@ export default function Home() {
               </span>
               <span className="text-slate-600">•</span>
               <span className="text-xs text-slate-400">{matchData.dateAnalyzed}</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/40">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                Anti-Hallucination Engine Active
+              </span>
             </div>
             <h1 className="text-base sm:text-lg font-black text-white mt-0.5">
               {matchData.title}
@@ -158,7 +214,7 @@ export default function Home() {
             {/* Match Overview Callout */}
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3 text-xs text-slate-300">
               <span className="font-bold text-white block mb-1">
-                Match Summary & Tactical Context:
+                Visual Match Summary & Tactical Breakdown:
               </span>
               <p className="leading-relaxed">{matchData.overallMatchSummary}</p>
             </div>
@@ -222,6 +278,8 @@ export default function Home() {
                   currentTimeSeconds={currentTime}
                   onSeek={handleSeek}
                   targetWrestler={targetWrestler}
+                  onAddEvent={handleAddEvent}
+                  onDeleteEvent={handleDeleteEvent}
                 />
               )}
 
