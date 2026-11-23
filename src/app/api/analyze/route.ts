@@ -216,7 +216,22 @@ export async function POST(req: NextRequest) {
           }
 
           const openRouterData = await openRouterRes.json();
+
+          // Detect "model output error" / empty response (200 OK but no usable content)
+          const errorMsg = openRouterData.error?.message || '';
           const rawJson = openRouterData.choices?.[0]?.message?.content;
+
+          if (
+            errorMsg.includes('model output') ||
+            errorMsg.includes('output must contain') ||
+            errorMsg.includes('empty') ||
+            !rawJson ||
+            rawJson.trim() === ''
+          ) {
+            lastError = errorMsg || 'Model returned empty output';
+            continue; // try next fallback model
+          }
+
           const cleanJson = cleanMarkdownJson(rawJson);
           return NextResponse.json({
             success: true,

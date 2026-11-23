@@ -159,7 +159,7 @@ export default function Home() {
               </span>
               <span className="text-slate-600">•</span>
               <span className="text-[10px] font-mono font-black text-emerald-300 bg-emerald-950/90 px-2 py-0.5 rounded-md border border-emerald-500/50 shadow-sm shadow-emerald-500/20">
-                v2.4.1 (OpenRouter Active)
+                v2.4.2 (OpenRouter Fixed)
               </span>
             </div>
             <h1 className="text-base sm:text-lg font-black text-white mt-0.5">
