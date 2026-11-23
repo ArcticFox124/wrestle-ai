@@ -104,6 +104,8 @@ export interface MatchAnalysisResult {
   weightClass?: string;
   dateAnalyzed: string;
   durationSeconds: number;
+  cannotAnalyze?: boolean;
+  rejectionReason?: string;
   finalScore: {
     red: number;
     green: number;

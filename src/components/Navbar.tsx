@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-emerald-950/90 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-500/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>v2.2.0 (Zero Key Mode)</span>
+                <span>v2.3.0 (Honest Vision)</span>
               </div>
             </div>
             <p className="text-xs text-slate-400 hidden sm:block truncate max-w-xs">

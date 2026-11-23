@@ -22,7 +22,8 @@ import {
   Sparkles, 
   UploadCloud, 
   FileCheck,
-  ShieldCheck 
+  ShieldCheck,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function Home() {
@@ -158,7 +159,7 @@ export default function Home() {
               </span>
               <span className="text-slate-600">•</span>
               <span className="text-[10px] font-mono font-black text-emerald-300 bg-emerald-950/90 px-2 py-0.5 rounded-md border border-emerald-500/50 shadow-sm shadow-emerald-500/20">
-                v2.2.0 (Zero Key)
+                v2.3.0 (Honest Vision)
               </span>
             </div>
             <h1 className="text-base sm:text-lg font-black text-white mt-0.5">
@@ -183,6 +184,31 @@ export default function Home() {
             </button>
           </div>
         </div>
+
+        {/* Honest Rejection Banner (When video cannot be verified or analyzed) */}
+        {matchData.cannotAnalyze && (
+          <div className="bg-rose-950/80 border border-rose-800/80 rounded-2xl p-4 text-rose-200 shadow-xl space-y-2 animate-fade-in">
+            <div className="flex items-center gap-2 text-rose-300 font-extrabold text-sm">
+              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+              <span>Cannot Automatically Analyze This Video</span>
+            </div>
+            <p className="text-xs text-rose-200/90 leading-relaxed">
+              {matchData.rejectionReason || 'The visual content could not be verified as a Folkstyle wrestling match.'}
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs border-t border-rose-900/60 mt-2">
+              <button
+                onClick={() => setIsInputModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-rose-800 hover:bg-rose-700 text-white font-bold transition-all shadow-sm"
+              >
+                Try Another Video / Engine
+              </button>
+              <span className="text-slate-400 hidden sm:inline">•</span>
+              <span className="text-slate-300 text-xs font-medium">
+                You can still watch the video below and use <strong>"+ Tag at MM:SS"</strong> in the Film Log to record scoring actions manually.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Folkstyle Scoreboard */}
         <Scoreboard matchData={matchData} currentTimeSeconds={currentTime} />
