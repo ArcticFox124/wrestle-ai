@@ -176,18 +176,26 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Candidate models to try in order if one is retired/deprecated by OpenRouter
+      // Candidate models to try in order — free models first so credits aren't burned
       const requestedModel = body.openRouterModel?.trim();
+      const isFreeModel = requestedModel?.includes(':free');
       const modelsToTry = [
         requestedModel,
-        'google/gemini-flash-1.5',
+        // Free-tier models (no credits required)
         'meta-llama/llama-3.2-11b-vision-instruct:free',
+        'google/gemini-flash-1.5-8b:free',
+        'mistralai/mistral-7b-instruct:free',
+        // Paid fallbacks (low cost)
+        'google/gemini-flash-1.5',
         'meta-llama/llama-3.2-11b-vision-instruct',
         'openai/gpt-4o-mini',
       ].filter(Boolean) as string[];
+      // Deduplicate
+      const seen = new Set<string>();
+      const uniqueModels = modelsToTry.filter(m => seen.has(m) ? false : (seen.add(m), true));
 
       let lastError = '';
-      for (const targetModel of modelsToTry) {
+      for (const targetModel of uniqueModels) {
         try {
           const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -202,17 +210,25 @@ export async function POST(req: NextRequest) {
               messages: [{ role: 'user', content: contentParts }],
               response_format: { type: 'json_object' },
               temperature: 0.05,
+              max_tokens: 2048, // Cap to stay within free-tier credit budgets
             }),
           });
 
           if (!openRouterRes.ok) {
-            const err = await openRouterRes.text();
-            lastError = err;
-            // If model is retired or not found (404), try next model in fallback list
-            if (openRouterRes.status === 404 || err.includes('no longer available') || err.includes('not found')) {
+            const errText = await openRouterRes.text();
+            lastError = errText;
+            // Skip to next model on: retired/not found, insufficient credits, or empty output
+            if (
+              openRouterRes.status === 404 ||
+              openRouterRes.status === 402 ||
+              errText.includes('no longer available') ||
+              errText.includes('not found') ||
+              errText.includes('credits') ||
+              errText.includes('max_tokens')
+            ) {
               continue;
             }
-            return NextResponse.json({ error: `OpenRouter Error: ${err}` }, { status: openRouterRes.status });
+            return NextResponse.json({ error: `OpenRouter Error: ${errText}` }, { status: openRouterRes.status });
           }
 
           const openRouterData = await openRouterRes.json();
